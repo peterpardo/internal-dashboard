@@ -1,10 +1,11 @@
-import { Box } from "@mui/material";
+import { Container } from "@mui/material";
 import React from "react";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Box
+    <Container
       component="main"
+      maxWidth="md"
       sx={{
         display: "grid",
         placeItems: "center",
@@ -12,6 +13,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       }}
     >
       {children}
-    </Box>
+    </Container>
   );
 }
