@@ -1,0 +1,20 @@
+{
+  // Prefer path aliases (@/...) over relative imports
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+
+  // Keep imports clean (no .tsx, no /index)
+  "typescript.preferences.importModuleSpecifierEnding": "minimal",
+  "javascript.preferences.importModuleSpecifierEnding": "minimal",
+
+  // ESLint runs on save
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+
+  // Use project TypeScript version
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // Formatting discipline
+  "editor.formatOnSave": true
+}
