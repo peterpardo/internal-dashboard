@@ -25,38 +25,51 @@ CREATE TABLE users (
 
     last_login_at TIMESTAMPTZ,
 
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT users_tenant_email_unique UNIQUE (tenant_id, email),
     CONSTRAINT users_tenant_fk FOREIGN KEY (tenant_id) ON DELETE CASCADE
 );
 
--- CREATE TABLE tenant_users (
---     tenant_id UUID NOT NULL,
---     user_id UUID NOT NULL,
+CREATE TABLE roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    tenant_id UUID NOT NULL
 
---     -- example metadata
---     is_owner BOOLEAN NOT NULL DEFAULT false,
+    name TEXT NOT NULL,
+    description TEXT,
 
---     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
---     PRIMARY KEY (tenant_id, user_id),
+    CONSTRAINT roles_tenant_fk FOREIGN KEY (tenant_id) ON DELETE CASCADE
+);
 
---     CONSTRAINT fk_tenant 
---         FOREIGN KEY (tenant_id)
---         REFERENCES tenant (id)
---         ON DELETE CASCADE,
+CREATE TABLE permissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
---     CONSTRAINT fk_user
---         FOREIGN KEY (user_id)
---         REFERENCES user (id)
---         ON DELETE CASCADE
--- );
+    key TEXT NOT NULL,  
+    description TEXT,
 
--- CREATE INDEX idx_tenant_users_user_id 
---     ON tenant_users (user_id);
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+);
 
--- CREATE INDEX idx_tenant_users_tenant_id
---     ON tenant_users (tenant_id);
+CREATE TABLE user_roles (
+    user_id UUID NOT NULL,
+    role_id UUID NOT NULL,
+
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE
+);
+
+CREATE TABLE role_permissions (
+    role_id UUID NOT NULL,
+    permission_id UUID NOT NULL,
+
+    PRIMARY KEY (role_id, permission_id),
+    FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
+)
 
