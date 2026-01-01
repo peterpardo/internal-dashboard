@@ -2,6 +2,7 @@
 
 ### `app/`
 
+```
 app/
 ├─ (public)/
 │ ├─ page.tsx # Landing / marketing
@@ -50,9 +51,11 @@ app/
 ├─ layout.tsx # Root layout
 ├─ globals.css
 └─ favicon.ico
+```
 
 ### `components/`
 
+```
 components/
 ├─ ui/ # Design-system level (reusable)
 │ ├─ button.tsx
@@ -68,9 +71,11 @@ components/
 ├─ forms/
 │ ├─ user-form.tsx
 │ └─ project-form.tsx
+```
 
 ### `lib/`
 
+````
 lib/
 ├─ auth/
 │ ├─ session.ts
@@ -94,3 +99,5 @@ lib/
 ├─ constants/
 │ ├─ routes.ts
 │ └─ roles.ts
+```co
+````
