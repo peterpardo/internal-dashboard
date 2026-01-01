@@ -75,7 +75,7 @@ components/
 
 ### `lib/`
 
-````
+```
 lib/
 ├─ auth/
 │ ├─ session.ts
@@ -99,5 +99,4 @@ lib/
 ├─ constants/
 │ ├─ routes.ts
 │ └─ roles.ts
-```co
-````
+```
