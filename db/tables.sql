@@ -1,5 +1,5 @@
 CREATE TABLE tenants (
-    id UUID PRIMARY KEY gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -29,13 +29,13 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT users_tenant_email_unique UNIQUE (tenant_id, email),
-    CONSTRAINT users_tenant_fk FOREIGN KEY (tenant_id) ON DELETE CASCADE
+    CONSTRAINT users_tenant_fk FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
 );
 
 CREATE TABLE roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
-    tenant_id UUID NOT NULL
+    tenant_id UUID NOT NULL,
 
     name TEXT NOT NULL,
     description TEXT,
@@ -43,7 +43,7 @@ CREATE TABLE roles (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT roles_tenant_fk FOREIGN KEY (tenant_id) ON DELETE CASCADE
+    CONSTRAINT roles_tenant_fk FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
 );
 
 CREATE TABLE permissions (
@@ -53,7 +53,7 @@ CREATE TABLE permissions (
     description TEXT,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE user_roles (
@@ -72,5 +72,5 @@ CREATE TABLE role_permissions (
     PRIMARY KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
-)
+);
 
