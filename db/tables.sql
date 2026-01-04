@@ -53,6 +53,7 @@ CREATE TABLE permissions (
     description TEXT,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 );
 
 CREATE TABLE user_roles (
