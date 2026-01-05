@@ -74,3 +74,40 @@ CREATE TABLE role_permissions (
     FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
 );
 
+CREATE TABLE service_requests_status (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    tenant_id UUID NOT NULL,
+    key VARCHAR(50) NOT NULL,
+    label VARCHAR(100) NOT NULL,
+    order_index INTEGER NOT NULL,
+    is_terminal BOOLEAN NOT NULL,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
+);
+
+CREATE TABLE service_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    tenant_id UUID NOT NULL,
+
+    request_number VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    current_status_id UUID NOT NULL,
+    priority VARCHAR(20) NOT NULL,
+
+    requested_by UUID NOT NULL,
+    assigned_to UUID,
+
+    due_date DATE,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW,
+
+    FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
+    FOREIGN KEY (requested_by) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_to) REFERENCES users (id) ON DELETE CASCADE
+);
