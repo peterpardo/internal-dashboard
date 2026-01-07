@@ -50,16 +50,6 @@ CREATE TABLE role_permissions (
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
 );
-CREATE TABLE service_requests_status (
-    id INT PRIMARY KEY DEFAULT AUTO_INCREMENT,
-    tenant_id UUID NOT NULL,
-    key VARCHAR(50) NOT NULL,
-    label VARCHAR(100) NOT NULL,
-    order_index INTEGER NOT NULL,
-    is_terminal BOOLEAN NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
-);
 CREATE TABLE service_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
@@ -71,9 +61,45 @@ CREATE TABLE service_requests (
     requested_by UUID NOT NULL,
     assigned_to UUID,
     due_date DATE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
     FOREIGN KEY (requested_by) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (assigned_to) REFERENCES users (id) ON DELETE CASCADE
 );
+CREATE TABLE service_request_statuses (
+    id INT PRIMARY KEY DEFAULT AUTO_INCREMENT,
+    tenant_id UUID NOT NULL,
+    key VARCHAR(50) NOT NULL,
+    label VARCHAR(100) NOT NULL,
+    order_index INTEGER NOT NULL,
+    is_terminal BOOLEAN NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
+);
+CREATE TABLE service_request_status_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    service_request_id UUID NOT NULL,
+    from_status_id INT NOT NULL,
+    to_status_id INT NOT NULL,
+    changed_by UUID NOT NULL comment TEXT NOT NULL,
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (service_request_id) REFERENCES service_requests (id) ON DELETE CASCADE,
+    FOREIGN KEY (from_status_id) REFERENCES service_request_statuses (id) ON DELETE CASCADE,
+    FOREIGN KEY (to_status_id) REFERENCES service_request_statuses (id) ON DELETE CASCADE,
+    FOREIGN KEY (changed_by) REFERENCES users (id) ON DELETE CASCADE
+);
+-- add 'activity_logs' table
+CREATE TABLE service_request_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    service_request_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (service_request_id) REFERENCES service_requests (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+-- add 'attachments' table
+-- add 'notifications' table
+-- add 'settings' table
