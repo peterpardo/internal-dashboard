@@ -1,4 +1,4 @@
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -6,7 +6,7 @@ CREATE TABLE tenants (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     email TEXT NOT NULL,
@@ -20,8 +20,8 @@ CREATE TABLE users (
     CONSTRAINT users_tenant_email_unique UNIQUE (tenant_id, email),
     CONSTRAINT users_tenant_fk FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
 );
-CREATE TABLE roles (
-    id INT PRIMARY KEY DEFAULT AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS roles (
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     tenant_id UUID NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
@@ -29,28 +29,28 @@ CREATE TABLE roles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT roles_tenant_fk FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
 );
-CREATE TABLE permissions (
-    id INT PRIMARY KEY DEFAULT AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS permissions (
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     key TEXT NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE TABLE user_roles (
+CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID NOT NULL,
     role_id INT NOT NULL,
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE
 );
-CREATE TABLE role_permissions (
+CREATE TABLE IF NOT EXISTS role_permissions (
     role_id INT NOT NULL,
     permission_id INT NOT NULL,
     PRIMARY KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
 );
-CREATE TABLE service_requests (
+CREATE TABLE IF NOT EXISTS service_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     request_number VARCHAR(50) NOT NULL,
@@ -67,8 +67,8 @@ CREATE TABLE service_requests (
     FOREIGN KEY (requested_by) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (assigned_to) REFERENCES users (id) ON DELETE CASCADE
 );
-CREATE TABLE service_request_statuses (
-    id INT PRIMARY KEY DEFAULT AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS service_request_statuses (
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     tenant_id UUID NOT NULL,
     key VARCHAR(50) NOT NULL,
     label VARCHAR(100) NOT NULL,
@@ -77,12 +77,13 @@ CREATE TABLE service_request_statuses (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
 );
-CREATE TABLE service_request_status_history (
+CREATE TABLE IF NOT EXISTS service_request_status_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_request_id UUID NOT NULL,
     from_status_id INT NOT NULL,
     to_status_id INT NOT NULL,
-    changed_by UUID NOT NULL comment TEXT NOT NULL,
+    changed_by UUID NOT NULL,
+    comment TEXT NOT NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     FOREIGN KEY (service_request_id) REFERENCES service_requests (id) ON DELETE CASCADE,
     FOREIGN KEY (from_status_id) REFERENCES service_request_statuses (id) ON DELETE CASCADE,
@@ -90,7 +91,7 @@ CREATE TABLE service_request_status_history (
     FOREIGN KEY (changed_by) REFERENCES users (id) ON DELETE CASCADE
 );
 -- add 'activity_logs' table
-CREATE TABLE service_request_comments (
+CREATE TABLE IF NOT EXISTS service_request_comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_request_id UUID NOT NULL,
     user_id UUID NOT NULL,
