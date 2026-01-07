@@ -7,7 +7,11 @@ const globalForPg = globalThis as unknown as {
 export const pool =
   globalForPg.pool ??
   new Pool({
-    connectionString: process.env.DATABASE_URL,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    host: process.env.PGHOST,
+    port: parseInt(process.env.PGPORT as string),
+    database: process.env.PGDATABASE,
     ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : true,
   });
 
