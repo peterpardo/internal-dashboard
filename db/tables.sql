@@ -1,3 +1,20 @@
+-- UNCOMMENT IF NEED TO RESET THE TABLES
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS attachments;
+DROP TABLE IF EXISTS service_request_comments;
+DROP TABLE IF EXISTS activity_logs;
+DROP TABLE IF EXISTS service_request_status_history;
+DROP TABLE IF EXISTS service_requests;
+DROP TABLE IF EXISTS user_roles;
+DROP TABLE IF EXISTS role_permissions;
+DROP TABLE IF EXISTS permissions;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS service_request_statuses;
+DROP TABLE IF EXISTS settings;
+DROP TABLE IF EXISTS tenants;
+
+
 CREATE TABLE IF NOT EXISTS tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
@@ -21,7 +38,7 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT users_tenant_fk FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS roles (
-    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
@@ -31,20 +48,20 @@ CREATE TABLE IF NOT EXISTS roles (
 );
 CREATE TABLE IF NOT EXISTS permissions (
     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    key TEXT NOT NULL,
+    key VARCHAR(150) NOT NULL UNIQUE,
     description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID NOT NULL,
-    role_id INT NOT NULL,
+    role_id UUID NOT NULL,
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS role_permissions (
-    role_id INT NOT NULL,
+    role_id UUID NOT NULL,
     permission_id INT NOT NULL,
     PRIMARY KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
