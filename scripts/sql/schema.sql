@@ -69,25 +69,6 @@ CREATE TABLE IF NOT EXISTS role_permissions (
     FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
 );
 
-CREATE TYPE priority AS ENUM('low', 'medium', 'high');
-CREATE TABLE IF NOT EXISTS service_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL,
-    request_number VARCHAR(50) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    current_status_id UUID NOT NULL,    
-    priority priority,
-    requested_by UUID NOT NULL,
-    assigned_to UUID,
-    due_date DATE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
-    FOREIGN KEY (requested_by) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (assigned_to) REFERENCES users (id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS service_request_statuses (
     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     tenant_id UUID NOT NULL,
@@ -98,6 +79,53 @@ CREATE TABLE IF NOT EXISTS service_request_statuses (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
 );
+
+-- Create 'priority' type only once
+-- Makes this script safe to re-run
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'priority'
+  ) THEN
+    CREATE TYPE priority AS ENUM ('low', 'medium', 'high');
+  END IF;
+END$$;
+CREATE TABLE IF NOT EXISTS service_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    request_number VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    current_status_id INT NOT NULL,    
+    priority priority NOT NULL DEFAULT 'medium',
+    requested_by UUID NOT NULL,
+    assigned_to UUID,
+    due_date DATE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT service_requests_request_number_unique 
+        UNIQUE (tenant_id, request_number),
+    CONSTRAINT service_requests_current_status_fk
+        FOREIGN KEY (current_status_id)
+        REFERENCES service_request_statuses (id)
+        ON DELETE CASCADE,
+    CONSTRAINT service_requests_tenant_fk 
+        FOREIGN KEY (tenant_id) 
+        REFERENCES tenants (id) 
+        ON DELETE CASCADE,
+    CONSTRAINT service_requests_requested_by_fk
+        FOREIGN KEY (requested_by) 
+        REFERENCES users (id) 
+        ON DELETE CASCADE,
+    CONSTRAINT service_requests_assigned_to_fk
+        FOREIGN KEY (assigned_to) 
+        REFERENCES users (id) 
+        ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS service_request_status_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_request_id UUID NOT NULL,
