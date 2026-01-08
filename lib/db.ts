@@ -12,7 +12,7 @@ export const pool =
     host: process.env.PGHOST,
     port: parseInt(process.env.PGPORT as string),
     database: process.env.PGDATABASE,
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : true,
+    ssl: process.env.NODE_ENV === "production",
   });
 
 if (process.env.NODE_ENV !== "production") {
