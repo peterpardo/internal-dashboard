@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "seed:all": "tsx scripts/seed-permissions.ts && tsx scripts/seed-tenant.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
