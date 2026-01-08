@@ -1,4 +1,5 @@
--- UNCOMMENT IF NEED TO RESET THE TABLES
+-- RUN ONLY ONCE
+
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS attachments;
 DROP TABLE IF EXISTS service_request_comments;
@@ -67,14 +68,16 @@ CREATE TABLE IF NOT EXISTS role_permissions (
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
 );
+
+CREATE TYPE priority AS ENUM('low', 'medium', 'high');
 CREATE TABLE IF NOT EXISTS service_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     request_number VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    current_status_id UUID NOT NULL,
-    priority VARCHAR(20) NOT NULL,
+    current_status_id UUID NOT NULL,    
+    priority priority,
     requested_by UUID NOT NULL,
     assigned_to UUID,
     due_date DATE,
@@ -84,6 +87,7 @@ CREATE TABLE IF NOT EXISTS service_requests (
     FOREIGN KEY (requested_by) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (assigned_to) REFERENCES users (id) ON DELETE CASCADE
 );
+
 CREATE TABLE IF NOT EXISTS service_request_statuses (
     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     tenant_id UUID NOT NULL,
