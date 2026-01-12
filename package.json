@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "seed:all": "tsx scripts/seed-permissions.ts && tsx scripts/seed-tenant.ts",
-    "schema:init": "tsx scripts/initialize-db.ts"
+    "db:seed": "tsx scripts/seed-permissions.ts && tsx scripts/seed-tenant.ts",
+    "db:init": "tsx scripts/initialize-db.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -19,6 +19,7 @@
     "@mui/icons-material": "^7.3.6",
     "@mui/material": "^7.3.6",
     "@mui/material-nextjs": "^7.3.6",
+    "bcrypt": "^6.0.0",
     "next": "16.0.10",
     "pg": "^8.16.3",
     "react": "19.2.1",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.16.0",
     "@types/react": "^19",
