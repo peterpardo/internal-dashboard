@@ -35,8 +35,12 @@ CREATE TABLE IF NOT EXISTS users (
     last_login_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT users_tenant_email_unique UNIQUE (tenant_id, email),
-    CONSTRAINT users_tenant_fk FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
+
+    CONSTRAINT users_tenant_email_unique 
+        UNIQUE (tenant_id, email),
+    CONSTRAINT users_tenant_id_fk 
+        FOREIGN KEY (tenant_id) 
+        REFERENCES tenants (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -45,7 +49,11 @@ CREATE TABLE IF NOT EXISTS roles (
     description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT roles_tenant_fk FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
+
+    CONSTRAINT roles_tenant_id_fk 
+        FOREIGN KEY (tenant_id) 
+        REFERENCES tenants (id) 
+        ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS permissions (
     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -132,12 +140,25 @@ CREATE TABLE IF NOT EXISTS service_request_status_history (
     from_status_id INT NOT NULL,
     to_status_id INT NOT NULL,
     changed_by UUID NOT NULL,
-    comment TEXT NOT NULL,
+    comment TEXT,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (service_request_id) REFERENCES service_requests (id) ON DELETE CASCADE,
-    FOREIGN KEY (from_status_id) REFERENCES service_request_statuses (id) ON DELETE CASCADE,
-    FOREIGN KEY (to_status_id) REFERENCES service_request_statuses (id) ON DELETE CASCADE,
-    FOREIGN KEY (changed_by) REFERENCES users (id) ON DELETE CASCADE
+    
+    CONSTRAINT service_request_status_history_service_request_id_fk
+        FOREIGN KEY (service_request_id) 
+        REFERENCES service_requests (id) 
+        ON DELETE CASCADE,
+    CONSTRAINT service_request_status_history_from_status_id_fk
+        FOREIGN KEY (from_status_id) 
+        REFERENCES service_request_statuses (id) 
+        ON DELETE CASCADE,
+    CONSTRAINT service_request_status_history_to_status_id_fk
+        FOREIGN KEY (to_status_id) 
+        REFERENCES service_request_statuses (id) 
+        ON DELETE CASCADE,
+    CONSTRAINT service_request_status_history_changed_by_fk
+        FOREIGN KEY (changed_by) 
+        REFERENCES users (id) 
+        ON DELETE CASCADE
 );
 -- add 'activity_logs' table
 CREATE TABLE IF NOT EXISTS service_request_comments (
@@ -147,8 +168,15 @@ CREATE TABLE IF NOT EXISTS service_request_comments (
     comment TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (service_request_id) REFERENCES service_requests (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+
+    CONSTRAINT service_request_comments_service_request_id_fk
+        FOREIGN KEY (service_request_id) 
+        REFERENCES service_requests (id) 
+        ON DELETE CASCADE,
+    CONSTRAINT service_request_comments_user_id_fk
+        FOREIGN KEY (user_id) 
+        REFERENCES users (id) 
+        ON DELETE CASCADE
 );
 -- add 'attachments' table
 -- add 'notifications' table
