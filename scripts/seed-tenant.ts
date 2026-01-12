@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { pool } from "./db";
+import bcrypt from "bcrypt";
 
 async function seedTenant() {
   const client = await pool.connect();
@@ -14,6 +15,7 @@ async function seedTenant() {
       `
         INSERT INTO tenants (id, name, slug, status)
         VALUES ($1, 'Demo Tenant', 'demo', 'active')
+        ON CONFLICT (slug) DO NOTHING
         `,
       [tenantId],
     );
@@ -37,7 +39,7 @@ async function seedTenant() {
     }
     console.log("Statuses seeded");
 
-    const adminId = randomUUID();
+    const adminRoleId = randomUUID();
 
     // 3. Roles
     await client.query(
@@ -45,7 +47,7 @@ async function seedTenant() {
         INSERT INTO roles (tenant_id, id, name)
         VALUES ($1, $2, 'Admin')
         `,
-      [tenantId, adminId],
+      [tenantId, adminRoleId],
     );
     console.log("Role seeded");
 
@@ -56,9 +58,22 @@ async function seedTenant() {
         SELECT $1, id FROM permissions
         ON CONFLICT DO NOTHING
         `,
-      [adminId],
+      [adminRoleId],
     );
     console.log("Role_permissions seeded");
+
+    // 5. Add Admin user
+    // email: admin@demo.com
+    // password: admin123
+    const passwordHash = await bcrypt.hash("admin123", 10);
+    await client.query(
+      `
+      INSERT INTO users (tenant_id, email, password_hash, first_name, status)
+      VALUES ($1, 'admin@demo.com', $2, 'Demo Admin', 'active')
+      `,
+      [tenantId, passwordHash],
+    );
+    console.log("User seeded");
 
     await client.query("COMMIT");
     console.log("Tenant bootstrapped");
