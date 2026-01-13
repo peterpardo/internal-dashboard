@@ -189,3 +189,30 @@ CREATE TABLE IF NOT EXISTS service_request_comments (
 -- add 'attachments' table
 -- add 'notifications' table
 -- add 'settings' table
+
+-- Authentication Tables
+CREATE TABLE IF NOT EXISTS sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT sessions_user_id_fk 
+        FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    token TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT password_resets_user_id_fk 
+        FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE CASCADE 
+);
