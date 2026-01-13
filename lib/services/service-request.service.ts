@@ -41,8 +41,20 @@ export async function createServiceRequest(input: CreateServiceRequestInput) {
       [input.tenantId],
     );
 
+    const sequenceRes = await client.query(
+      `
+        INSERT INTO service_request_counters (tenant_id, last_number)
+        VALUES ($1, 1)
+        ON CONFLICT (tenant_id)
+        DO UPDATE SET last_number = service_request_counters.last_number + 1
+        RETURNING last_number
+      `,
+      [input.tenantId],
+    );
+    const sequenceNumber = sequenceRes.rows[0].last_number;
+
     const requestId = randomUUID();
-    const requestNumber = `SR-${new Date().getFullYear()}-${String(numberRes.rows[0].count + 1).padStart(6, "0")}`;
+    const requestNumber = `SR-${new Date().getFullYear()}-${String(sequenceNumber).padStart(6, "0")}`;
 
     await client.query(
       `
