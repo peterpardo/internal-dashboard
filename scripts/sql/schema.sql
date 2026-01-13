@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS service_request_counters (
 CREATE TABLE IF NOT EXISTS service_request_status_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_request_id UUID NOT NULL,
-    from_status_id INT NOT NULL,
+    from_status_id INT,
     to_status_id INT NOT NULL,
     changed_by UUID NOT NULL,
     comment TEXT,
@@ -185,6 +185,7 @@ CREATE TABLE IF NOT EXISTS service_request_comments (
         REFERENCES users (id) 
         ON DELETE CASCADE
 );
+
 -- add 'attachments' table
 -- add 'notifications' table
 -- add 'settings' table
