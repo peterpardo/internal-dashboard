@@ -8,7 +8,7 @@ async function seedTenant() {
   try {
     await client.query("BEGIN");
 
-    const tenantId = randomUUID();
+    const tenantId = "e5452123-8ba5-4852-be16-df0111d7fbfb";
 
     // 1. Tenant
     await client.query(
@@ -65,13 +65,14 @@ async function seedTenant() {
     // 5. Add Admin user
     // email: admin@demo.com
     // password: admin123
+    const adminUserId = "ac72331f-f51f-4c7f-a8eb-95ccb7a6ed10";
     const passwordHash = await bcrypt.hash("admin123", 10);
     await client.query(
       `
-      INSERT INTO users (tenant_id, email, password_hash, first_name, status)
-      VALUES ($1, 'admin@demo.com', $2, 'Demo Admin', 'active')
+      INSERT INTO users (id, tenant_id, email, password_hash, first_name, status)
+      VALUES ($1, $2, 'admin@demo.com', $3, 'Demo Admin', 'active')
       `,
-      [tenantId, passwordHash],
+      [adminUserId, tenantId, passwordHash],
     );
     console.log("User seeded");
 
