@@ -134,6 +134,13 @@ CREATE TABLE IF NOT EXISTS service_requests (
         ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS service_request_counters (
+    tenant_id UUID PRIMARY KEY
+        REFERENCES tenants (id)
+        ON DELETE CASCADE,
+    last_number INT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS service_request_status_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_request_id UUID NOT NULL,
