@@ -32,15 +32,6 @@ export async function createServiceRequest(input: CreateServiceRequestInput) {
       throw new AppError("NO_INITIAL_STATUS", 500, "No service request status configured");
     }
 
-    const numberRes = await client.query(
-      `
-        SELECT COUNT(*)::int as count
-        FROM service_requests
-        WHERE tenant_id = $1
-        `,
-      [input.tenantId],
-    );
-
     const sequenceRes = await client.query(
       `
         INSERT INTO service_request_counters (tenant_id, last_number)
