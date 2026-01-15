@@ -7,7 +7,7 @@ export function requirePermission(permission: Permission) {
     const permissions = await getUserPermissions(userId, tenantId);
 
     if (!permissions.has(permission)) {
-      throw new AppError("FORBIDDEN", 403, "User not allowed");
+      throw new AppError("NOT_ALLOWED", 403, "Forbidden");
     }
   };
 }
