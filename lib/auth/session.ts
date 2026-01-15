@@ -25,9 +25,16 @@ export async function getSessionRecord(sessionId: string) {
 
   if (result.rowCount === 0) return null;
 
-  return result.rows[0];
+  const session = result.rows[0];
+
+  if (session.expires_at < new Date() || session.status !== "active") {
+    await deleteSessionRecord(sessionId);
+    return null;
+  }
+
+  return session;
 }
 
-export async function deleteSession(sessionId: string) {
+export async function deleteSessionRecord(sessionId: string) {
   await pool.query(`DELETE FROM sessions WHERE id = $1`, [sessionId]);
 }
