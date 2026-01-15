@@ -10,7 +10,7 @@ const protectedRoutes = [
   "/api/projects",
   "/api/users",
 ];
-const publicRoutes = ["/"];
+const publicRoutes = ["/sign-in", "/"];
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -19,19 +19,27 @@ export default async function proxy(req: NextRequest) {
 
   const sessionId = (await getSessionCookie()) as string;
   if (isProtectedRoute && !sessionId) {
-    return NextResponse.redirect(new URL("/", req.nextUrl));
+    return NextResponse.redirect(new URL("/sign-in", req.nextUrl));
   }
 
   const session = await getSessionRecord(sessionId);
   if (isProtectedRoute && !session) {
-    return NextResponse.redirect(new URL("/", req.nextUrl));
+    return NextResponse.redirect(new URL("/sign-in", req.nextUrl));
   }
 
   if (isPublicRoute && session && !req.nextUrl.pathname.startsWith("/dashboard")) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
-  return NextResponse.next();
+  const newHeaders = new Headers(req.headers);
+  newHeaders.set("x-user-id", session.user_id);
+  newHeaders.set("x-tenant-id", session.tenant_id);
+
+  return NextResponse.next({
+    request: {
+      headers: newHeaders,
+    },
+  });
 }
 
 // Routes Proxy should not run on
