@@ -1,10 +1,38 @@
 import { pool } from "./db";
 
-const PERMISSIONS = [
-  { key: "user.read", description: "Read users" },
-  { key: "user.create", description: "Create users" },
-  { key: "service_request.create", description: "Create service requests" },
-  { key: "service_request.change_status", description: "Change request status" },
+export const PERMISSIONS = [
+  {
+    key: "user.read",
+    description: "Read user information",
+  },
+  {
+    key: "user.create",
+    description: "Create new users",
+  },
+  {
+    key: "user.update",
+    description: "Update existing users",
+  },
+  {
+    key: "user.delete",
+    description: "Delete users",
+  },
+  {
+    key: "service_request.read",
+    description: "Read service requests",
+  },
+  {
+    key: "service_request.create",
+    description: "Create service requests",
+  },
+  {
+    key: "service_request.update",
+    description: "Update service requests",
+  },
+  {
+    key: "service_request.change_status",
+    description: "Change service request status",
+  },
 ];
 
 async function seedPermissions() {
