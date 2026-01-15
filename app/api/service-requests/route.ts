@@ -1,8 +1,7 @@
-import { AppError } from "@/lib/errors/app-error";
+import { toHttpErrorResponse } from "@/lib/http/to-http-response";
 import { createServiceRequest } from "@/lib/services/service-request.service";
 import { createServiceRequestSchema } from "@/lib/validations/service-request.schema";
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
 
 export async function GET() {
   return NextResponse.json({ message: "Server up!" });
@@ -27,38 +26,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ data: result });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: error.issues,
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    if (error instanceof AppError) {
-      return NextResponse.json(
-        {
-          error: {
-            code: error.code,
-            message: error.message,
-          },
-        },
-        { status: error.status },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "Something went wrong",
-        },
-      },
-      { status: 500 },
-    );
+    return toHttpErrorResponse(error);
   }
 }
