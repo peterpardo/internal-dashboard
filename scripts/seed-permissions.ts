@@ -1,6 +1,6 @@
 import { pool } from "./db";
 
-export const PERMISSIONS = [
+const PERMISSIONS = [
   {
     id: 1,
     key: "user.read",
