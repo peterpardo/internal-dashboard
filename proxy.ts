@@ -7,7 +7,7 @@ const protectedRoutePrefixes = [
   "/projects",
   "/users",
   "/reports",
-  "/api/projects",
+  "/api/service-requests",
   "/api/users",
 ];
 const publicRoutes = ["/sign-in", "/"];
