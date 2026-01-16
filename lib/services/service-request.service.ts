@@ -1,3 +1,5 @@
+import { Actor } from "@/lib/auth/actor";
+import { PERMISSIONS } from "@/lib/constants/permissions";
 import { pool } from "@/lib/db";
 import { AppError } from "@/lib/errors/app-error";
 import { randomUUID } from "crypto";
@@ -83,4 +85,29 @@ export async function createServiceRequest(input: CreateServiceRequestInput) {
   } finally {
     client.release();
   }
+}
+
+export async function listServiceRequests(actor: Actor) {
+  if (actor.permissions.has(PERMISSIONS.SERVICE_REQUEST_UPDATE)) {
+    const result = await pool.query(
+      `
+      SELECT * FROM service_requests
+      WHERE tenant_id = $1
+      `,
+      [actor.tenantId],
+    );
+
+    return result.rows;
+  }
+
+  const result = await pool.query(
+    `
+    SELECT * from service_requests
+    WHERE tenant_id = $1 
+      AND requested_by = $2
+    `,
+    [actor.tenantId, actor.userId],
+  );
+
+  return result.rows;
 }
