@@ -117,14 +117,14 @@ export async function getServiceRequest(actor: Actor, requestId: string) {
 
   const result = await pool.query(
     `
-  SELECT * FROM service_requests
-  WHERE tenant_id = $1
-    AND id = $2
+      SELECT * FROM service_requests
+      WHERE tenant_id = $1
+        AND id = $2
   `,
     [actor.tenantId, requestId],
   );
 
-  return result;
+  return result.rows[0];
 }
 
 export async function changeServiceRequestStatus(
