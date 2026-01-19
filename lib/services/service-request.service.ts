@@ -5,15 +5,13 @@ import { AppError } from "@/lib/errors/app-error";
 import { randomUUID } from "crypto";
 
 type CreateServiceRequestInput = {
-  tenantId: string;
-  userId: string;
   title: string;
   description?: string;
   priority?: "low" | "medium" | "high";
   dueDate: Date;
 };
 
-export async function createServiceRequest(input: CreateServiceRequestInput) {
+export async function createServiceRequest(actor: Actor, input: CreateServiceRequestInput) {
   const client = await pool.connect();
 
   try {
@@ -21,13 +19,13 @@ export async function createServiceRequest(input: CreateServiceRequestInput) {
 
     const statusRes = await client.query(
       `
-            SELECT id 
-            FROM service_request_statuses
-            WHERE tenant_id = $1
-            ORDER BY order_index ASC
-            LIMIT 1
-            `,
-      [input.tenantId],
+          SELECT id 
+          FROM service_request_statuses
+          WHERE tenant_id = $1
+          ORDER BY order_index ASC
+          LIMIT 1
+          `,
+      [actor.tenantId],
     );
 
     if (!statusRes.rows[0]) {
@@ -36,13 +34,13 @@ export async function createServiceRequest(input: CreateServiceRequestInput) {
 
     const sequenceRes = await client.query(
       `
-        INSERT INTO service_request_counters (tenant_id, last_number)
-        VALUES ($1, 1)
-        ON CONFLICT (tenant_id)
-        DO UPDATE SET last_number = service_request_counters.last_number + 1
-        RETURNING last_number
-      `,
-      [input.tenantId],
+      INSERT INTO service_request_counters (tenant_id, last_number)
+      VALUES ($1, 1)
+      ON CONFLICT (tenant_id)
+      DO UPDATE SET last_number = service_request_counters.last_number + 1
+      RETURNING last_number
+    `,
+      [actor.tenantId],
     );
     const sequenceNumber = sequenceRes.rows[0].last_number;
 
@@ -51,28 +49,28 @@ export async function createServiceRequest(input: CreateServiceRequestInput) {
 
     await client.query(
       `
-        INSERT INTO service_requests (id, tenant_id, request_number, title, description, priority, current_status_id, requested_by, due_date)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        `,
+      INSERT INTO service_requests (id, tenant_id, request_number, title, description, priority, current_status_id, requested_by, due_date)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `,
       [
         requestId,
-        input.tenantId,
+        actor.tenantId,
         requestNumber,
         input.title,
         input.description ?? null,
         input.priority,
         statusRes.rows[0].id,
-        input.userId,
+        actor.userId,
         input.dueDate,
       ],
     );
 
     await client.query(
       `
-        INSERT INTO service_request_status_history (service_request_id, from_status_id, to_status_id, changed_by, changed_at)
-        VALUES ($1, $2, $3, $4, now())
-        `,
-      [requestId, statusRes.rows[0].id, statusRes.rows[0].id, input.userId],
+      INSERT INTO service_request_status_history (service_request_id, from_status_id, to_status_id, changed_by, changed_at)
+      VALUES ($1, $2, $3, $4, now())
+      `,
+      [requestId, statusRes.rows[0].id, statusRes.rows[0].id, actor.userId],
     );
 
     await client.query("COMMIT");
@@ -91,9 +89,9 @@ export async function listServiceRequests(actor: Actor) {
   if (actor.permissions.has(PERMISSIONS.SERVICE_REQUEST_UPDATE)) {
     const result = await pool.query(
       `
-      SELECT * FROM service_requests
-      WHERE tenant_id = $1
-      `,
+    SELECT * FROM service_requests
+    WHERE tenant_id = $1
+    `,
       [actor.tenantId],
     );
 
@@ -102,12 +100,48 @@ export async function listServiceRequests(actor: Actor) {
 
   const result = await pool.query(
     `
-    SELECT * from service_requests
-    WHERE tenant_id = $1 
-      AND requested_by = $2
-    `,
+  SELECT * from service_requests
+  WHERE tenant_id = $1 
+    AND requested_by = $2
+  `,
     [actor.tenantId, actor.userId],
   );
 
   return result.rows;
+}
+
+export async function getServiceRequest(actor: Actor, requestId: string) {
+  if (!actor.permissions.has(PERMISSIONS.SERVICE_REQUEST_READ)) {
+    return null;
+  }
+
+  const result = await pool.query(
+    `
+  SELECT * FROM service_requests
+  WHERE tenant_id = $1
+    AND id = $2
+  `,
+    [actor.tenantId, requestId],
+  );
+
+  return result;
+}
+
+export async function changeServiceRequestStatus(
+  actor: Actor,
+  requestId: string,
+  statusId: string,
+) {
+  if (!actor.permissions.has(PERMISSIONS.SERVICE_REQUEST_UPDATE)) {
+    return null;
+  }
+
+  await pool.query(
+    `
+      UPDATE service_requests
+      SET current_status_id = $1
+      WHERE id = $2
+  `,
+    [statusId, requestId],
+  );
 }
