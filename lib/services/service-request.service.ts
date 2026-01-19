@@ -5,7 +5,6 @@ import {
   canReadOwnOrAssigned,
   canUpdateServiceRequest,
 } from "@/lib/auth/service_request.policy";
-import { PERMISSIONS } from "@/lib/constants/permissions";
 import { pool } from "@/lib/db";
 import { AppError } from "@/lib/errors/app-error";
 import { randomUUID } from "crypto";
@@ -14,7 +13,20 @@ type CreateServiceRequestInput = {
   title: string;
   description?: string;
   priority?: "low" | "medium" | "high";
+  assignedTo?: string;
   dueDate: Date;
+};
+
+type UpdateServiceRequestInput = {
+  title?: string;
+  description?: string;
+  clearDescription?: boolean;
+  priority?: "low" | "medium" | "high";
+  clearPriority?: boolean;
+  assignedTo?: string;
+  clearAssignedTo?: boolean;
+  dueDate?: Date;
+  clearDueDate?: boolean;
 };
 
 export async function createServiceRequest(actor: Actor, input: CreateServiceRequestInput) {
@@ -176,4 +188,62 @@ export async function changeServiceRequestStatus(
   `,
     [statusId, actor.tenantId, requestId],
   );
+}
+
+export async function updateServiceRequest(
+  actor: Actor,
+  requestId: string,
+  input: UpdateServiceRequestInput,
+) {
+  if (!canUpdateServiceRequest(actor)) {
+    throw new AppError("FORBIDDEN", 403, "Not allowed to update service request");
+  }
+
+  const result = await pool.query(
+    `
+    UPDATE service_requests
+    SET 
+      title = COALESCE($1, title),
+      description = 
+        CASE
+          WHEN $2 = true THEN NULL
+          ELSE COALESCE($3, description)
+        END,
+      priority = 
+        CASE
+          WHEN $4 = true THEN NULL
+          ELSE COALESCE($5, priority)
+        END,
+      assigned_to = 
+        CASE
+          WHEN $6 = true THEN NULL
+          ELSE COALESCE($7, assigned_to)
+        END,
+      due_date = 
+        CASE
+          WHEN $8 = true THEN NULL
+          ELSE COALESCE($9, due_date)
+        END,
+      updated_at = now()
+    WHERE id = $10
+      AND tenant_id = $11
+    `,
+    [
+      input?.title ?? null,
+      input?.clearDescription ?? false,
+      input?.description ?? null,
+      input?.clearPriority ?? false,
+      input?.priority ?? null,
+      input?.clearAssignedTo ?? false,
+      input?.assignedTo ?? null,
+      input?.clearDueDate ?? false,
+      input?.dueDate ?? null,
+      requestId,
+      actor.tenantId,
+    ],
+  );
+
+  if (result.rowCount === 0) {
+    throw new AppError("NOT_FOUND", 404, "Service request not found");
+  }
 }
