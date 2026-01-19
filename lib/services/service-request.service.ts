@@ -1,4 +1,10 @@
 import { Actor } from "@/lib/auth/actor";
+import {
+  canCreateServiceRequest,
+  canReadAllServiceRequests,
+  canReadOwnOrAssigned,
+  canUpdateServiceRequest,
+} from "@/lib/auth/service_request.policy";
 import { PERMISSIONS } from "@/lib/constants/permissions";
 import { pool } from "@/lib/db";
 import { AppError } from "@/lib/errors/app-error";
@@ -15,6 +21,10 @@ export async function createServiceRequest(actor: Actor, input: CreateServiceReq
   const client = await pool.connect();
 
   try {
+    if (!canCreateServiceRequest(actor)) {
+      throw new AppError("FORBIDDEN", 403, "Not allowed to create service requests");
+    }
+
     await client.query("BEGIN");
 
     const statusRes = await client.query(
@@ -86,7 +96,7 @@ export async function createServiceRequest(actor: Actor, input: CreateServiceReq
 }
 
 export async function listServiceRequests(actor: Actor) {
-  if (actor.permissions.has(PERMISSIONS.SERVICE_REQUEST_UPDATE)) {
+  if (canReadAllServiceRequests(actor)) {
     const result = await pool.query(
       `
     SELECT * FROM service_requests
@@ -102,7 +112,10 @@ export async function listServiceRequests(actor: Actor) {
     `
   SELECT * from service_requests
   WHERE tenant_id = $1 
-    AND requested_by = $2
+    AND (
+      requested_by = $2
+      OR assigned_to = $2
+      )
   `,
     [actor.tenantId, actor.userId],
   );
@@ -111,20 +124,37 @@ export async function listServiceRequests(actor: Actor) {
 }
 
 export async function getServiceRequest(actor: Actor, requestId: string) {
-  if (!actor.permissions.has(PERMISSIONS.SERVICE_REQUEST_READ)) {
-    return null;
+  if (!canReadOwnOrAssigned(actor)) {
+    throw new AppError("FORBIDDEN", 403, "Not allowed to read service request");
+  }
+
+  if (canReadAllServiceRequests(actor)) {
+    const result = await pool.query(
+      `
+      SELECT * FROM service_requests
+      WHERE tenant_id = $1
+      AND id = $2
+      `,
+      [actor.tenantId, requestId],
+    );
+
+    return result.rows[0] ?? null;
   }
 
   const result = await pool.query(
     `
       SELECT * FROM service_requests
       WHERE tenant_id = $1
-        AND id = $2
-  `,
-    [actor.tenantId, requestId],
+      AND id = $2
+      AND (
+        requested_by = $3
+        OR assigned_to = $3
+      )
+      `,
+    [actor.tenantId, requestId, actor.userId],
   );
 
-  return result.rows[0];
+  return result.rows[0] ?? null;
 }
 
 export async function changeServiceRequestStatus(
@@ -132,16 +162,18 @@ export async function changeServiceRequestStatus(
   requestId: string,
   statusId: string,
 ) {
-  if (!actor.permissions.has(PERMISSIONS.SERVICE_REQUEST_UPDATE)) {
-    return null;
+  if (!canUpdateServiceRequest(actor)) {
+    throw new AppError("FORBIDDEN", 403, "Not allowed to update service request");
   }
 
   await pool.query(
     `
       UPDATE service_requests
       SET current_status_id = $1
-      WHERE id = $2
+      WHERE tenant_id = $2
+        AND id = $2
+      
   `,
-    [statusId, requestId],
+    [statusId, actor.tenantId, requestId],
   );
 }
